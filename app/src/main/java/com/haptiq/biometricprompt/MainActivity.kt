@@ -2,12 +2,9 @@ package com.haptiq.biometricprompt
 
 
 import android.content.Intent
-import android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -56,7 +53,7 @@ class MainActivity : AppCompatActivity() {
                                 val enrollIntent = Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
                                     putExtra(
                                         Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
-                                        BIOMETRIC_STRONG or DEVICE_CREDENTIAL
+                                        androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
                                     )
                                 }
                                 enrollLauncher.launch(enrollIntent)
@@ -89,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                                     }
 
                                     BiometricPromptManager.BiometricResult.AuthenticationNotSet -> {
-                                        "Authentication not set"
+                                        "Biometric authentication not set"
                                     }
 
                                     BiometricPromptManager.BiometricResult.AuthenticationSuccess -> {

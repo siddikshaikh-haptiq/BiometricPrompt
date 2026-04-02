@@ -1,8 +1,5 @@
 package com.haptiq.biometricprompt
 
-import android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-import android.os.Build
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
@@ -20,22 +17,17 @@ class BiometricPromptManager(
         description: String
     ) {
         val manager = BiometricManager.from(activity)
-        val authenticators = if(Build.VERSION.SDK_INT >= 30) {
-            BIOMETRIC_STRONG or DEVICE_CREDENTIAL
-        } else BIOMETRIC_STRONG
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_WEAK
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(title)
             .setDescription(description)
-            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+            .setAllowedAuthenticators(authenticators)
 
-        if(Build.VERSION.SDK_INT < 30) {
-            promptInfo.setNegativeButtonText("Cancel")
-        } else {
-            promptInfo.setNegativeButtonText("Cancel")
-        }
+        // For biometric-only auth, a negative button is required across API levels.
+        promptInfo.setNegativeButtonText("Cancel")
 
-        when(manager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
+        when (manager.canAuthenticate(authenticators)) {
             BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
                 resultChannel.trySend(BiometricResult.HardwareUnavailable)
                 return
