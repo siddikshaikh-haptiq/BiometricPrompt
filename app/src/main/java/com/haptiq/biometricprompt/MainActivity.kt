@@ -20,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,6 +44,14 @@ class MainActivity : AppCompatActivity() {
                     val biometricResult by promptManager.promptResults.collectAsState(
                         initial = null
                     )
+                    var showDummyData by remember { mutableStateOf(false) }
+                    val dummyProfile = remember {
+                        DummyProfile(
+                            fullName = "Demo User",
+                            email = "demo.user@example.com",
+                            accountId = "ACC-1001"
+                        )
+                    }
                     val enrollLauncher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.StartActivityForResult(),
                         onResult = {
@@ -48,15 +59,27 @@ class MainActivity : AppCompatActivity() {
                         }
                     )
                     LaunchedEffect(biometricResult) {
-                        if (biometricResult is BiometricPromptManager.BiometricResult.AuthenticationNotSet) {
-                            if (Build.VERSION.SDK_INT >= 30) {
-                                val enrollIntent = Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
-                                    putExtra(
-                                        Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
-                                        androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
-                                    )
+                        when (biometricResult) {
+                            BiometricPromptManager.BiometricResult.AuthenticationSuccess -> {
+                                showDummyData = true
+                            }
+
+                            BiometricPromptManager.BiometricResult.AuthenticationNotSet -> {
+                                showDummyData = false
+                                if (Build.VERSION.SDK_INT >= 30) {
+                                    val enrollIntent = Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
+                                        putExtra(
+                                            Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
+                                            androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+                                        )
+                                    }
+                                    enrollLauncher.launch(enrollIntent)
                                 }
-                                enrollLauncher.launch(enrollIntent)
+                            }
+
+                            null -> Unit
+                            else -> {
+                                showDummyData = false
                             }
                         }
                     }
@@ -104,12 +127,25 @@ class MainActivity : AppCompatActivity() {
                             )
 
                         }
+
+                        if (showDummyData) {
+                            Text(text = "Dummy data")
+                            Text(text = "Name: ${dummyProfile.fullName}")
+                            Text(text = "Email: ${dummyProfile.email}")
+                            Text(text = "Account ID: ${dummyProfile.accountId}")
+                        }
                     }
                 }
             }
         }
     }
 }
+
+data class DummyProfile(
+    val fullName: String,
+    val email: String,
+    val accountId: String
+)
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
